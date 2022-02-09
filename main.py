@@ -103,7 +103,7 @@ for key, value in result.items():
     
 # Plot progress w.r.t the generator's and the discriminator's loss function
 t_steps = np.arange(num_epochs)
-plt.figure(figsize=(36, 10))
+plt.figure(figsize=(6, 5))
 plt.title("Progress in the loss function")
 plt.plot(
     t_steps, qgan.g_loss, label="Generator loss function", color="mediumvioletred", linewidth=2
@@ -118,7 +118,7 @@ plt.ylabel("loss")
 plt.show()
 
 # Plot progress w.r.t relative entropy
-plt.figure(figsize=(36, 10))
+plt.figure(figsize=(6, 5))
 plt.title("Relative Entropy")
 plt.plot(
     np.linspace(0, num_epochs, len(qgan.rel_entr)), qgan.rel_entr, color="mediumblue", lw=4, ls=":"
@@ -137,7 +137,7 @@ for i in range(int(bounds[1] + 1)):
     temp += [np.sum(log_normal == i)]
 log_normal = np.array(temp / sum(temp))
 
-plt.figure(figsize=(36, 10))
+plt.figure(figsize=(6, 5))
 plt.title("Probability Distribution")
 samples_g, prob_g = qgan.generator.get_output(qgan.quantum_instance, shots=10000)
 samples_g = np.array(samples_g)
