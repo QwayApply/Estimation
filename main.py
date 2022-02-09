@@ -16,6 +16,7 @@ predoc = df2['perc'].to_numpy()
 vet = df3['perc'].to_numpy()
 
 
+
 from matplotlib.font_manager import json_dump
 import numpy as np
 
@@ -35,7 +36,7 @@ algorithm_globals.random_seed = seed
 
 
 
-lit_data = predoc
+lit_data = med
 
 # Number training data samples
 N = lit_data.shape[0]
@@ -55,9 +56,9 @@ print(lit_data.shape)
 
 # Set number of training epochs
 # Note: The algorithm's runtime can be shortened by reducing the number of training epochs.
-num_epochs = 15
+num_epochs = 30
 # Batch size
-batch_size = 200
+batch_size = 100
 
 # Initialize qGAN
 qgan = QGAN(lit_data, bounds, num_qubits, batch_size, num_epochs, snapshot_dir=None)
@@ -102,7 +103,7 @@ for key, value in result.items():
     
 # Plot progress w.r.t the generator's and the discriminator's loss function
 t_steps = np.arange(num_epochs)
-plt.figure(figsize=(6, 5))
+plt.figure(figsize=(36, 10))
 plt.title("Progress in the loss function")
 plt.plot(
     t_steps, qgan.g_loss, label="Generator loss function", color="mediumvioletred", linewidth=2
@@ -117,7 +118,7 @@ plt.ylabel("loss")
 plt.show()
 
 # Plot progress w.r.t relative entropy
-plt.figure(figsize=(6, 5))
+plt.figure(figsize=(36, 10))
 plt.title("Relative Entropy")
 plt.plot(
     np.linspace(0, num_epochs, len(qgan.rel_entr)), qgan.rel_entr, color="mediumblue", lw=4, ls=":"
@@ -127,7 +128,7 @@ plt.xlabel("time steps")
 plt.ylabel("relative entropy")
 plt.show()
 
-# Plot the CDF of the resulting distribution against the target distribution, i.e. log-normal
+# Plot the PDF of the resulting distribution against the target distribution, i.e. log-normal
 log_normal = np.random.lognormal(mean=1, sigma=1, size=100000)
 log_normal = np.round(log_normal)
 log_normal = log_normal[log_normal <= bounds[1]]
@@ -136,16 +137,13 @@ for i in range(int(bounds[1] + 1)):
     temp += [np.sum(log_normal == i)]
 log_normal = np.array(temp / sum(temp))
 
-plt.figure(figsize=(6, 5))
-plt.title("CDF (Cumulative Distribution Function)")
+plt.figure(figsize=(36, 10))
+plt.title("Probability Distribution")
 samples_g, prob_g = qgan.generator.get_output(qgan.quantum_instance, shots=10000)
 samples_g = np.array(samples_g)
 samples_g = samples_g.flatten()
 num_bins = len(prob_g)
 plt.bar(samples_g, prob_g, color="royalblue", width=0.8, label="simulation")
-plt.plot(
-    log_normal, "-o", label="log-normal", color="deepskyblue", linewidth=4, markersize=12
-)
 plt.xticks(np.arange(min(samples_g), max(samples_g) + 1, 1.0))
 plt.grid()
 plt.xlabel("x")
