@@ -1,59 +1,22 @@
-import numpy as np
+#-*- coding: utf-8 -*-
 
-# Importing standard Qiskit libraries
-from qiskit import QuantumCircuit, transpile, BasicAer, IBMQ
-# Loading your IBM Quantum account(s)
+import pandas as pd
 
-provider = IBMQ.load_account()
-qbackend = provider.get_backend('simulator_statevector')
-
-import openpyxl
+df = pd.read_excel('extract.xlsx')
 
 
-def read(fn):
-    wb = openpyxl.open(filename=fn)
-    ws = wb.active
-    lines = []
-    for row in ws.rows:
-        line = []
-        for cell in row:
-            line.append(cell.value)
-        lines.append(line)
-    return lines, ws.rows
 
 
-data, roww=read('output.xlsx')
-real_data = np.array(data)
-print(type(roww))
-print(type(real_data))
+df1 = df.where(df['Major'] == '약학'); df1 = df1.dropna()
+df2 = df.where(df['Major'] == '의예'); df2 = df2.dropna()
+df3 = df.where(df['Major'] == '수의예'); df3 = df3.dropna()
+
+med = df1['perc'].to_numpy()
+predoc = df2['perc'].to_numpy()
+vet = df3['perc'].to_numpy()
 
 
-print(real_data)
-
-real_data=np.delete(real_data,1,axis=1)
-real_data=np.delete(real_data,2,axis=1)
-real_data=np.delete(real_data,2,axis=1)
-print(real_data)
-
-lit_data=np.array([])
-sci_data=np.array([])
-
-for i in range(real_data.shape[0]):
-    if real_data[i][0]=="문과":
-        lit_data=np.append(lit_data, real_data[i][1])
-    elif real_data[i][0]=="이과":
-        sci_data=np.append(sci_data, real_data[i][1])
-print(lit_data)
-print(sci_data)
-print(real_data)
-
-lit_data[lit_data=='']=0.0
-lit_data=lit_data.astype(np.float)
-print(lit_data)
-sci_data[sci_data=='']=0.0
-sci_data=sci_data.astype(np.float)
-print(sci_data)
-
+from matplotlib.font_manager import json_dump
 import numpy as np
 
 seed = 71
@@ -71,6 +34,9 @@ from qiskit_machine_learning.algorithms import NumPyDiscriminator, QGAN
 algorithm_globals.random_seed = seed
 
 
+
+lit_data = predoc
+
 # Number training data samples
 N = lit_data.shape[0]
 
@@ -78,9 +44,9 @@ N = lit_data.shape[0]
 
 # Set the data resolution
 # Set upper and lower data values as list of k min/max data values [[min_0,max_0],...,[min_k-1,max_k-1]]
-bounds = np.array([0.0, 1023.0])
+bounds = np.array([0.0, 100.0])
 # Set number of qubits per data dimension as list of k qubit values[#q_0,...,#q_k-1]
-num_qubits = [10]
+num_qubits = [5]
 k = len(num_qubits)
 print(lit_data)
 print(type(lit_data))
@@ -89,9 +55,9 @@ print(lit_data.shape)
 
 # Set number of training epochs
 # Note: The algorithm's runtime can be shortened by reducing the number of training epochs.
-num_epochs = 10
+num_epochs = 15
 # Batch size
-batch_size = 20000
+batch_size = 200
 
 # Initialize qGAN
 qgan = QGAN(lit_data, bounds, num_qubits, batch_size, num_epochs, snapshot_dir=None)
@@ -104,7 +70,7 @@ quantum_instance = QuantumInstance(
 # Set an initial state for the generator circuit
 init_dist = UniformDistribution(sum(num_qubits))
 
-entangler_map = [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 7], [7, 8], [8, 9], [9, 0]] 
+entangler_map = [[0, 1], [1, 2], [2, 3], [3, 4],[4,0]] 
 
 # Set the ansatz circuit
 ansatz = TwoLocal(int(np.sum(num_qubits)), "ry", "cz", entangler_map, reps=3)
@@ -148,4 +114,41 @@ plt.grid()
 plt.legend(loc="best")
 plt.xlabel("time steps")
 plt.ylabel("loss")
+plt.show()
+
+# Plot progress w.r.t relative entropy
+plt.figure(figsize=(6, 5))
+plt.title("Relative Entropy")
+plt.plot(
+    np.linspace(0, num_epochs, len(qgan.rel_entr)), qgan.rel_entr, color="mediumblue", lw=4, ls=":"
+)
+plt.grid()
+plt.xlabel("time steps")
+plt.ylabel("relative entropy")
+plt.show()
+
+# Plot the CDF of the resulting distribution against the target distribution, i.e. log-normal
+log_normal = np.random.lognormal(mean=1, sigma=1, size=100000)
+log_normal = np.round(log_normal)
+log_normal = log_normal[log_normal <= bounds[1]]
+temp = []
+for i in range(int(bounds[1] + 1)):
+    temp += [np.sum(log_normal == i)]
+log_normal = np.array(temp / sum(temp))
+
+plt.figure(figsize=(6, 5))
+plt.title("CDF (Cumulative Distribution Function)")
+samples_g, prob_g = qgan.generator.get_output(qgan.quantum_instance, shots=10000)
+samples_g = np.array(samples_g)
+samples_g = samples_g.flatten()
+num_bins = len(prob_g)
+plt.bar(samples_g, prob_g, color="royalblue", width=0.8, label="simulation")
+plt.plot(
+    log_normal, "-o", label="log-normal", color="deepskyblue", linewidth=4, markersize=12
+)
+plt.xticks(np.arange(min(samples_g), max(samples_g) + 1, 1.0))
+plt.grid()
+plt.xlabel("x")
+plt.ylabel("p(x)")
+plt.legend(loc="best")
 plt.show()
