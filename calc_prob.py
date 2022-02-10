@@ -1,5 +1,6 @@
 #-*- coding: utf-8 -*-
 
+import ast 
 import scipy as sp
 import numpy as np
 from qiskit import BasicAer
@@ -57,7 +58,7 @@ ansatz = TwoLocal(int(np.sum(num_qubits)), "ry", "cz", entangler_map, reps=3)
 
 # You can increase the number of training epochs and use random initial parameters.
 f = open('model/'+depm[1]+'.txt', 'r')
-init_params = f.readlines(); init_params.pop(-1)
+init_params = f.read(); init_params = ast.literal_eval(init_params)
 
 # Set generator circuit by adding the initial distribution infront of the ansatz
 g_circuit = ansatz.compose(init_dist, front=False)
