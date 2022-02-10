@@ -1,8 +1,10 @@
 #-*- coding: utf-8 -*-
 
 import ast 
+import base64
 import scipy as sp
 import numpy as np
+import pandas as pd
 from qiskit import BasicAer
 from qiskit.circuit.library import TwoLocal, UniformDistribution
 
@@ -10,7 +12,7 @@ from qiskit.utils import QuantumInstance, algorithm_globals
 from qiskit_machine_learning.algorithms import NumPyDiscriminator, QGAN
 
 
-import pandas as pd
+
 
 depm=input("대학교 학과")
 depm = depm.split(' ')
@@ -96,3 +98,16 @@ p = (prob_g[samples_g.index(new_s[0]+expected_score)] + prob_g[samples_g.index(n
 rv = sp.stats.norm(loc=expected_score, scale=1-p)
 prob = rv.cdf(expected_cut)
 print(prob)
+
+
+x = np.linspace(expected_score - 3*(1-p), expected_score + 3*(1-p), 100)
+plt.plot(x, rv)
+plt.vlines(expected_cut)
+ax = plt.gca()
+ax.ticklabel_format(useOffset=False)
+plt.ylabel(y_label)
+plt.xlabel(x_label)
+plt.savefig("cache/cached1.png")
+cached_img = open("cache/cached1.png")
+cached_img_b64 = base64.b64encode(cached_img.read())
+os.remove("cache/cached1.png")
