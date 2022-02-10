@@ -57,7 +57,7 @@ ansatz = TwoLocal(int(np.sum(num_qubits)), "ry", "cz", entangler_map, reps=3)
 
 # You can increase the number of training epochs and use random initial parameters.
 f = open('model/'+depm[1]+'.txt', 'r')
-init_params = list(f.read())
+init_params = f.read().strip('][').split(', ')
 
 # Set generator circuit by adding the initial distribution infront of the ansatz
 g_circuit = ansatz.compose(init_dist, front=False)
