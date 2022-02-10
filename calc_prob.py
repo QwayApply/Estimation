@@ -12,7 +12,7 @@ from qiskit_machine_learning.algorithms import NumPyDiscriminator, QGAN
 import pandas as pd
 
 depm=input("대학교 학과")
-depm.split(' ')
+depm = depm.split(' ')
 
 df = pd.read_excel('extract_ori.xlsx')
 df1=df.where((df['전형']==depm[1])&((df['합격']=='최초합')|(df['합격']=='추합'))); df1=df1.dropna()
